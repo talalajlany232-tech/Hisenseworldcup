@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>لوحة التحكم — مسابقة التوقع</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap');
+
+  :root{
+    --bg-base:#061b10;
+    --bg-panel:rgba(12, 41, 24, 0.94);
+    --bg-soft:#0c3a1f;
+    --text:#f6f2e8;
+    --muted:#8aa39d;
+    --accent:#00b3ac;
+    --accent-strong:#6fe1de;
+    --gold:#00b3ac;
+    --danger:#e79b9b;
+    --border:#117d77;
+    --field:#0f312f;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:'IBM Plex Sans Arabic', sans-serif;
+    background:radial-gradient(circle at top center, rgba(0,179,172,0.12), transparent 24%),
+                linear-gradient(180deg, #063b3a 0%, #061b10 40%, #04160d 100%);
+    color:var(--text);
+    margin:0;
+    padding:28px 20px 40px;
+    min-height:100vh;
+  }
+  body::before{
+    content:'';
+    position:fixed;
+    inset:0;
+    background-image:radial-gradient(circle at 20% 10%, rgba(0,179,172,0.05), transparent 18%),
+                      linear-gradient(0deg, rgba(255,255,255,0.04) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 20px 20px, 40px 40px, 40px 40px;
+    pointer-events:none;
+    z-index:-1;
+  }
+  .wrap{ max-width:480px; margin:0 auto; }
+  h1{
+    font-family:'Fraunces', serif; font-weight:700; font-size:24px;
+    text-align:center; margin:0 0 4px;
+  }
+  .sub{ text-align:center; color:var(--muted); font-size:14px; margin-bottom:26px; }
+
+  .card{
+    background:var(--bg-panel);
+    border-radius:16px;
+    padding:22px;
+    margin-bottom:20px;
+    box-shadow:0 18px 40px rgba(0,0,0,0.22);
+  }
+  .card h2{
+    font-family:'Fraunces', serif; font-size:18px; font-weight:600;
+    color:var(--accent); margin:0 0 16px; text-align:center;
+  }
+  label{ display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
+  input[type=text], input[type="datetime-local"]{
+    width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(0, 179, 172, 0.25);
+    background:rgba(8, 49, 45, 0.88); color:var(--text); font-size:15px; margin-bottom:14px;
+    font-family:inherit;
+  }
+  .team-row{ display:flex; gap:12px; }
+  .team-row > div{ flex:1; }
+  .current-box{
+    background:rgba(0,179,172,0.12); border:1px solid rgba(0,179,172,0.42);
+    border-radius:10px; padding:12px 16px; margin-bottom:16px;
+    text-align:center; font-family:'Fraunces', serif; font-weight:600; font-size:17px;
+    color:var(--accent);
+  }
+  .score-row{ display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:18px; }
+  .score-team{ text-align:center; flex:1; }
+  .score-team .flag{ font-family:'IBM Plex Mono', monospace; font-size:13px; color:var(--accent); margin-bottom:6px; letter-spacing:.05em;}
+  input[type=number]{
+    width:70px; text-align:center; font-size:26px; font-family:'IBM Plex Mono', monospace;
+    padding:8px 0; border-radius:10px; border:1px solid rgba(0, 179, 172, 0.25);
+    background:rgba(8, 49, 45, 0.88); color:var(--text);
+  }
+  .dash{ font-family:'Fraunces', serif; font-size:22px; color:var(--muted); }
+  select{
+    width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(0, 179, 172, 0.25);
+    background:rgba(8, 49, 45, 0.88); color:var(--text); font-size:15px; margin-bottom:16px;
+    font-family:inherit;
+  }
+  select option{ background:var(--bg-panel); color:var(--text); }
+
+  button{
+    width:100%; padding:13px; border:none; border-radius:10px;
+    background:linear-gradient(135deg, var(--accent), var(--accent-strong)); color:var(--bg-base); font-weight:700; font-size:16px;
+    font-family:inherit; cursor:pointer; box-shadow:0 14px 30px rgba(0,179,172,0.22);
+  }
+  button:active{ transform:scale(0.99); }
+  button.secondary{
+    background:transparent; border:1px solid rgba(0, 179, 172, 0.35); color:var(--text);
+    margin-top:10px; font-weight:500; font-size:13px;
+  }
+  .msg{ text-align:center; font-size:13px; margin-top:10px; min-height:16px; }
+  .msg.ok{ color:var(--accent-strong); }
+  .msg.err{ color:var(--danger); }
+
+  .list-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; }
+  .count{ font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--muted); }
+
+  .entry{
+    display:flex; flex-direction:column; gap:2px;
+    padding:10px 4px; border-bottom:1px solid rgba(0, 179, 172, 0.16);
+    font-size:14px;
+  }
+  .entry:last-child{ border-bottom:none; }
+  .entry .row1{ display:flex; justify-content:space-between; }
+  .entry .name{ font-weight:500; }
+  .entry .score{ font-family:'IBM Plex Mono', monospace; color:var(--accent); font-weight:500; }
+  .entry .phone{ font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--muted); direction:ltr; text-align:right; }
+  .entry.winner{ background:rgba(0,179,172,0.12); border-radius:8px; padding-left:8px; padding-right:8px; }
+  .entry.winner .name::after{ content:" 🏆"; }
+  .empty{ text-align:center; color:var(--muted); font-size:13px; padding:16px 0; }
+
+  .lock-screen{
+    max-width:340px; margin:80px auto 0;
+    background:var(--bg-panel); border-radius:16px; padding:28px;
+    text-align:center;
+    box-shadow:0 18px 40px rgba(0,0,0,0.24);
+  }
+  .lock-screen h2{
+    font-family:'Fraunces', serif; font-size:20px; font-weight:600;
+    color:var(--accent); margin:0 0 6px;
+  }
+  .lock-screen p{ font-size:13px; color:var(--muted); margin:0 0 18px; }
+  .lock-screen input{
+    width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(81, 152, 95, 0.25);
+    background:rgba(19, 65, 35, 0.82); color:var(--text); font-size:15px; margin-bottom:12px;
+    font-family:inherit; text-align:center;
+  }
+</style>
+</head>
+<body>
+<div class="lock-screen" id="lockScreen">
+  <h2>لوحة صاحب المحل</h2>
+  <p>هاي الصفحة محمية، أدخل كلمة السر للمتابعة</p>
+  <input type="password" id="passwordInput" placeholder="كلمة السر">
+  <button id="unlockBtn">دخول</button>
+  <div class="msg" id="lockMsg"></div>
+</div>
+
+<div class="wrap" id="mainContent" style="display:none;">
+  <h1>لوحة صاحب المحل</h1>
+  <div class="sub">مسابقة توقع نتيجة المباراة</div>
+
+  <div class="card">
+    <h2>مباراة اليوم</h2>
+    <div class="current-box" id="currentBox">ما في مباراة مفعّلة</div>
+    <label>غيّر المباراة الحالية</label>
+    <div class="team-row">
+      <div><input type="text" id="newHome" placeholder="الفريق الأول"></div>
+      <div><input type="text" id="newAway" placeholder="الفريق الثاني"></div>
+    </div>
+    <label>وقت قفل التسجيل (عادةً قبل الصافرة بربع ساعة)</label>
+    <input type="datetime-local" id="newLockTime">
+    <button id="startMatchBtn">ابدأ مباراة جديدة</button>
+    <div class="msg" id="matchMsg"></div>
+  </div>
+
+  <div class="card">
+    <h2>عرض / تعديل مباراة</h2>
+    <label>اختر المباراة</label>
+    <select id="matchSelect"></select>
+
+    <div class="score-row">
+      <div class="score-team">
+        <div class="flag" id="selHome">—</div>
+        <input type="number" id="abra" min="0" max="20" value="0">
+      </div>
+      <div class="dash">—</div>
+      <div class="score-team">
+        <div class="flag" id="selAway">—</div>
+        <input type="number" id="anor" min="0" max="20" value="0">
+      </div>
+    </div>
+    <button id="saveResultBtn">احفظ النتيجة وحدد الفائزين</button>
+    <button class="secondary" id="resetBtn">تصفير توقعات هذي المباراة</button>
+    <div class="msg" id="adminMsg"></div>
+  </div>
+
+  <div class="card">
+    <div class="list-head">
+      <h2 style="margin:0;">التوقعات</h2>
+      <span class="count" id="count">0</span>
+    </div>
+    <div id="list"><div class="empty">لسا ما في توقعات</div></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// عدّل هالقيمتين من Settings > API بمشروع Supabase تبعك (نفس القيم يلي حطيتها بصفحة الزبائن)
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+let sb = null;
+
+function initSupabase(){
+  if (SUPABASE_URL.startsWith('http://') || SUPABASE_URL.startsWith('https://')) {
+    try {
+      sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch (error) {
+      console.error('Supabase init error', error);
+      sb = null;
+    }
+  } else {
+    sb = null;
+  }
+}
+
+function storageKey(key){
+  return 'wc-local-' + key;
+}
+
+async function kvGet(key){
+  if(sb){
+    const { data, error } = await sb.from('wc_kv').select('v').eq('k', key).maybeSingle();
+    if(error || !data) return null;
+    return data.v;
+  }
+  try {
+    const raw = localStorage.getItem(storageKey(key));
+    return raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    console.error('localStorage read error', error);
+    return null;
+  }
+}
+async function kvSet(key, value){
+  if(sb){
+    const { error } = await sb.from('wc_kv').upsert({ k: key, v: value });
+    if(error) console.error('supabase error', error);
+    return;
+  }
+  try {
+    localStorage.setItem(storageKey(key), JSON.stringify(value));
+  } catch (error) {
+    console.error('localStorage write error', error);
+  }
+}
+
+// غيّر كلمة السر هون لأي شي تختاره
+const ADMIN_PASSWORD = '1234';
+
+function checkAuth(){
+  if(sessionStorage.getItem('wc-admin-auth') === 'true'){
+    document.getElementById('lockScreen').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    return true;
+  }
+  return false;
+}
+
+document.getElementById('unlockBtn').addEventListener('click', async () => {
+  const entered = document.getElementById('passwordInput').value;
+  const msg = document.getElementById('lockMsg');
+  if(entered === ADMIN_PASSWORD){
+    sessionStorage.setItem('wc-admin-auth', 'true');
+    checkAuth();
+    initSupabase();
+    await init();
+  }else{
+    showMsg(msg, 'كلمة السر غلط', false);
+  }
+});
+document.getElementById('passwordInput').addEventListener('keydown', (e) => {
+  if(e.key === 'Enter') document.getElementById('unlockBtn').click();
+});
+
+const MATCH_KEY = 'wc-current-match';
+const MATCH_LIST_KEY = 'wc-match-list';
+let matchList = [];
+let selectedId = null;
+
+async function loadMatchList(){
+  const v = await kvGet(MATCH_LIST_KEY);
+  return v || [];
+}
+async function saveMatchList(list){
+  await kvSet(MATCH_LIST_KEY, list);
+}
+async function loadCurrentMatch(){
+  return await kvGet(MATCH_KEY);
+}
+async function setCurrentMatch(match){
+  await kvSet(MATCH_KEY, match);
+}
+async function loadEntries(id){
+  const v = await kvGet('wc-entries:' + id);
+  return v || [];
+}
+async function saveEntries(id, entries){
+  await kvSet('wc-entries:' + id, entries);
+}
+async function loadResult(id){
+  return await kvGet('wc-result:' + id);
+}
+async function saveResult(id, result){
+  await kvSet('wc-result:' + id, result);
+}
+
+function showMsg(el, text, ok){
+  el.textContent = text;
+  el.className = 'msg ' + (ok ? 'ok' : 'err');
+  setTimeout(()=>{ el.textContent=''; }, 3500);
+}
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+function formatLockTime(iso){
+  const d = new Date(iso);
+  return d.toLocaleString('ar', { dateStyle: 'medium', timeStyle: 'short' });
+}
+
+async function init(){
+  matchList = await loadMatchList();
+  const current = await loadCurrentMatch();
+
+  document.getElementById('currentBox').innerHTML = current
+    ? (escapeHtml(current.home) + ' 🆚 ' + escapeHtml(current.away) +
+       (current.lock_time ? '<div style="font-size:13px; color:var(--muted); font-family:\'IBM Plex Mono\', monospace; margin-top:6px;">التسجيل يقفل: ' + formatLockTime(current.lock_time) + '</div>' : ''))
+    : 'ما في مباراة مفعّلة';
+
+  const select = document.getElementById('matchSelect');
+  select.innerHTML = matchList.slice().reverse().map(m =>
+    `<option value="${m.id}">${escapeHtml(m.home)} 🆚 ${escapeHtml(m.away)}${current && current.id === m.id ? ' (الحالية)' : ''}</option>`
+  ).join('');
+
+  selectedId = current ? current.id : (matchList.length ? matchList[matchList.length - 1].id : null);
+  if(selectedId) select.value = selectedId;
+
+  select.addEventListener('change', () => {
+    selectedId = select.value;
+    renderSelectedMatch();
+  });
+
+  await renderSelectedMatch();
+}
+
+async function renderSelectedMatch(){
+  if(!selectedId){
+    document.getElementById('list').innerHTML = '<div class="empty">لسا ما في مباريات</div>';
+    document.getElementById('count').textContent = 0;
+    return;
+  }
+  const match = matchList.find(m => m.id === selectedId);
+  document.getElementById('selHome').textContent = match ? match.home : '—';
+  document.getElementById('selAway').textContent = match ? match.away : '—';
+
+  const [entries, result] = await Promise.all([loadEntries(selectedId), loadResult(selectedId)]);
+  document.getElementById('count').textContent = entries.length;
+
+  document.getElementById('abra').value = result ? result.bra : 0;
+  document.getElementById('anor').value = result ? result.nor : 0;
+
+  const list = document.getElementById('list');
+  if(entries.length === 0){
+    list.innerHTML = '<div class="empty">لسا ما في توقعات</div>';
+    return;
+  }
+  list.innerHTML = entries.map(e => {
+    const isWinner = result && Number(e.bra) === Number(result.bra) && Number(e.nor) === Number(result.nor);
+    return `<div class="entry ${isWinner ? 'winner' : ''}">
+      <div class="row1">
+        <span class="name">${escapeHtml(e.name)}</span>
+        <span class="score">${e.bra} — ${e.nor}</span>
+      </div>
+      <span class="phone">${escapeHtml(e.phone || '')}</span>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('startMatchBtn').addEventListener('click', async () => {
+  const home = document.getElementById('newHome').value.trim();
+  const away = document.getElementById('newAway').value.trim();
+  const lockTimeInput = document.getElementById('newLockTime').value;
+  const msg = document.getElementById('matchMsg');
+  if(!home || !away){
+    showMsg(msg, 'اكتب اسم الفريقين', false);
+    return;
+  }
+  const id = 'm' + Date.now();
+  const match = {
+    id, home, away,
+    date: new Date().toISOString(),
+    lock_time: lockTimeInput ? new Date(lockTimeInput).toISOString() : null
+  };
+  matchList.push(match);
+  await saveMatchList(matchList);
+  await setCurrentMatch(match);
+  showMsg(msg, 'صارت هاي هي المباراة الحالية، الزبائن رح يشوفوها فوراً', true);
+  document.getElementById('newHome').value = '';
+  document.getElementById('newAway').value = '';
+  document.getElementById('newLockTime').value = '';
+  selectedId = id;
+  await init();
+});
+
+document.getElementById('saveResultBtn').addEventListener('click', async () => {
+  if(!selectedId) return;
+  const bra = Number(document.getElementById('abra').value) || 0;
+  const nor = Number(document.getElementById('anor').value) || 0;
+  await saveResult(selectedId, { bra, nor });
+  showMsg(document.getElementById('adminMsg'), 'تم حفظ النتيجة، الفائزون تحدّدوا بعلامة 🏆 بالقائمة تحت — لازم تتواصل معهم يدوياً على رقم الموبايل', true);
+  await renderSelectedMatch();
+});
+
+document.getElementById('resetBtn').addEventListener('click', async () => {
+  if(!selectedId) return;
+  if(!confirm('متأكد إنك بدك تصفّر توقعات هاي المباراة؟')) return;
+  await saveEntries(selectedId, []);
+  await saveResult(selectedId, null);
+  showMsg(document.getElementById('adminMsg'), 'تم تصفير توقعات هاي المباراة', true);
+  await renderSelectedMatch();
+});
+
+initSupabase();
+if(checkAuth()){
+  init();
+}
+</script>
+</body>
+</html>

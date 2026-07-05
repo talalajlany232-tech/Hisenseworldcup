@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>توقع النتيجة</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=IBM+Plex+Sans+Arabic:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap');
+
+  :root{
+    --bg-base:#061b10;
+    --bg-panel:rgba(12, 41, 24, 0.94);
+    --bg-soft:#0c3a1f;
+    --text:#f6f2e8;
+    --muted:#8aa39d;
+    --accent:#00b3ac;
+    --accent-strong:#6fe1de;
+    --gold:#00b3ac;
+    --danger:#e79b9b;
+    --border:#117d77;
+    --field:#0f312f;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:'IBM Plex Sans Arabic', sans-serif;
+    background:radial-gradient(circle at top center, rgba(0,179,172,0.12), transparent 24%),
+                linear-gradient(180deg, #063b3a 0%, #061b10 40%, #04160d 100%);
+    color:var(--text);
+    margin:0;
+    padding:28px 20px 40px;
+    min-height:100vh;
+  }
+  body::before{
+    content:'';
+    position:fixed;
+    inset:0;
+    background-image:radial-gradient(circle at 20% 10%, rgba(0,179,172,0.05), transparent 18%),
+                      linear-gradient(0deg, rgba(255,255,255,0.04) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 20px 20px, 40px 40px, 40px 40px;
+    pointer-events:none;
+    z-index:-1;
+  }
+  .wrap{ max-width:100%; margin:0 auto; }
+  .main-layout{ display:flex; align-items:center; justify-content:center; gap:40px; margin-top:20px; }
+  .logo-side{ display:flex; align-items:center; justify-content:center; flex:0 0 280px; min-height:600px; }
+  .logo-side img{ width:280px; height:auto; object-fit:contain; }
+  .form-center{ flex:0 0 400px; }
+  .brand-bar{ display:none; }
+  h1{
+    font-family:'Fraunces', serif; font-weight:700; font-size:28px;
+    text-align:center; margin:0 0 4px;
+  }
+  .sub{ text-align:center; color:var(--muted); font-size:14px; margin-bottom:26px; }
+
+  .card{
+    background:var(--bg-panel);
+    border-radius:16px;
+    padding:22px;
+    margin-bottom:20px;
+    box-shadow:0 18px 40px rgba(0,0,0,0.22);
+  }
+  .card h2{
+    font-family:'Fraunces', serif; font-size:18px; font-weight:600;
+    color:var(--accent); margin:0 0 16px; text-align:center;
+  }
+  label{ display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
+  input[type=text]{
+    width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(0, 179, 172, 0.25);
+    background:rgba(8, 49, 45, 0.88); color:var(--text); font-size:15px; margin-bottom:16px;
+    font-family:inherit;
+  }
+  input[type=text]::placeholder{ color:rgba(246,242,232,0.65); }
+  input[type=text].invalid{ border-color:var(--danger); }
+  .hint{ font-size:12px; color:var(--muted); margin:-12px 0 16px; }
+  .score-row{ display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:18px; }
+  .score-team{ text-align:center; flex:1; }
+  .score-team .flag{ font-family:'IBM Plex Mono', monospace; font-size:13px; color:var(--accent); margin-bottom:6px; letter-spacing:.05em;}
+  input[type=number]{
+    width:70px; text-align:center; font-size:26px; font-family:'IBM Plex Mono', monospace;
+    padding:8px 0; border-radius:10px; border:1px solid rgba(0, 179, 172, 0.25);
+    background:rgba(8, 49, 45, 0.88); color:var(--text);
+  }
+  input[type=number]::-webkit-inner-spin-button{ opacity:1; }
+  .dash{ font-family:'Fraunces', serif; font-size:22px; color:var(--muted); }
+
+  button{
+    width:100%; padding:13px; border:none; border-radius:10px;
+    background:linear-gradient(135deg, var(--accent), var(--accent-strong)); color:var(--bg-base); font-weight:700; font-size:16px;
+    font-family:inherit; cursor:pointer; box-shadow:0 14px 30px rgba(0,179,172,0.22);
+  }
+  button:active{ transform:scale(0.99); }
+  
+  button#submitBtn{
+    width:100%; padding:13px; margin-top:10px;
+  }
+  .msg{ text-align:center; font-size:13px; margin-top:10px; min-height:16px; }
+  .msg.ok{ color:var(--accent-strong); }
+  .msg.err{ color:var(--danger); }
+
+  .list-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px; }
+  .list-head h2{ margin:0; }
+  .count{ font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--muted); }
+
+  .entry{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:10px 4px; border-bottom:1px solid rgba(0, 179, 172, 0.16);
+    font-size:14px;
+  }
+  .entry:last-child{ border-bottom:none; }
+  .entry .name{ font-weight:500; }
+  .entry .score{ font-family:'IBM Plex Mono', monospace; color:var(--accent); font-weight:500; }
+  .entry.winner{ background:rgba(0,179,172,0.12); border-radius:8px; padding-left:8px; padding-right:8px; }
+  .entry.winner .name::after{ content:" 🏆"; }
+  .empty{ text-align:center; color:var(--muted); font-size:13px; padding:16px 0; }
+
+  /* Responsive Mobile */
+  @media (max-width:768px){
+    body{ padding:16px 12px 30px; }
+    .wrap{ max-width:100%; }
+    h1{ font-size:22px; }
+    .sub{ font-size:13px; margin-bottom:18px; }
+    
+    .main-layout{
+      flex-direction:column; gap:12px; margin-top:12px; align-items:center;
+    }
+    .form-center{
+      flex:1; width:100%; max-width:100%;
+    }
+    .main-layout > .logo-side{
+      flex:0 0 auto; min-height:auto; width:140px; height:140px;
+    }
+    .main-layout > .logo-side img{
+      width:140px !important;
+    }
+    
+    .card{ padding:16px; margin-bottom:14px; }
+    .card h2{ font-size:16px; margin-bottom:12px; }
+    
+    label{ font-size:12px; margin-bottom:4px; }
+    input[type=text]{ font-size:14px; padding:9px 10px; margin-bottom:12px; }
+    .hint{ font-size:11px; margin:-10px 0 12px; }
+    
+    .score-row{ gap:10px; margin-bottom:14px; }
+    input[type=number]{
+      width:60px; font-size:22px; padding:6px 0;
+    }
+    .dash{ font-size:18px; }
+    
+    button#submitBtn{
+      padding:12px;
+    }
+    
+    .entry{ font-size:13px; padding:8px 0; }
+  }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 id="matchTitle" style="text-align:center;">جارِ التحميل…</h1>
+  <div class="sub" id="lockNotice" style="text-align:center;">توقع النتيجة النهائية واربح مع هايسنس</div>
+  
+  <div class="main-layout">
+    <!-- شعار على اليسار -->
+    <div class="logo-side" dir="ltr">
+      <img src="assets/igs-logo.png" alt="شعار IGS Electronics">
+    </div>
+    
+    <!-- الفورم في المنتصف -->
+    <div class="form-center">
+    <h2>سجّل توقعك</h2>
+    <label for="pname">اسمك</label>
+    <input type="text" id="pname" placeholder="مثلاً: أحمد">
+    <label for="pphone">رقم الموبايل (سوري)</label>
+    <input type="text" id="pphone" placeholder="09XXXXXXXX" inputmode="numeric">
+    <div class="hint">مثال: 0912345678 — نستخدمه فقط للتواصل بخصوص الجائزة</div>
+    <div class="score-row">
+      <div class="score-team">
+        <div class="flag" id="labelHome">—</div>
+        <input type="number" id="pbra" min="0" max="20" value="0">
+      </div>
+      <div class="dash">—</div>
+      <div class="score-team">
+        <div class="flag" id="labelAway">—</div>
+        <input type="number" id="pnor" min="0" max="20" value="0">
+      </div>
+    </div>
+    <button id="submitBtn">أرسل توقعي</button>
+    <div class="msg" id="msg"></div>
+    </div>
+    
+    <!-- شعار على اليمين -->
+    <div class="logo-side" dir="rtl">
+      <img src="assets/16-1772013159.png" alt="شعار FIFA كأس العالم">
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// عدّل هالقيمتين من Settings > API بمشروع Supabase تبعك
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+let sb = null;
+
+function initSupabase(){
+  if (SUPABASE_URL.startsWith('http://') || SUPABASE_URL.startsWith('https://')) {
+    try {
+      sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    } catch (error) {
+      console.error('Supabase init error', error);
+      sb = null;
+    }
+  } else {
+    sb = null;
+  }
+}
+
+function storageKey(key){
+  return 'wc-local-' + key;
+}
+
+async function kvGet(key){
+  if(sb){
+    const { data, error } = await sb.from('wc_kv').select('v').eq('k', key).maybeSingle();
+    if(error || !data) return null;
+    return data.v;
+  }
+  try {
+    const raw = localStorage.getItem(storageKey(key));
+    return raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    console.error('localStorage read error', error);
+    return null;
+  }
+}
+async function kvSet(key, value){
+  if(sb){
+    const { error } = await sb.from('wc_kv').upsert({ k: key, v: value });
+    if(error) console.error('supabase error', error);
+    return;
+  }
+  try {
+    localStorage.setItem(storageKey(key), JSON.stringify(value));
+  } catch (error) {
+    console.error('localStorage write error', error);
+  }
+}
+
+const MATCH_KEY = 'wc-current-match';
+let currentMatch = null;
+
+async function loadCurrentMatch(){
+  return await kvGet(MATCH_KEY);
+}
+async function loadEntries(id){
+  const v = await kvGet('wc-entries:' + id);
+  return v || [];
+}
+async function saveEntries(id, entries){
+  await kvSet('wc-entries:' + id, entries);
+}
+async function loadResult(id){
+  return await kvGet('wc-result:' + id);
+}
+
+function showMsg(el, text, ok){
+  el.textContent = text;
+  el.className = 'msg ' + (ok ? 'ok' : 'err');
+  setTimeout(()=>{ el.textContent=''; }, 3500);
+}
+function escapeHtml(s){
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+function isValidSyrianPhone(v){
+  const cleaned = v.replace(/[\s-]/g, '');
+  return /^(\+963|0)9\d{8}$/.test(cleaned);
+}
+
+async function init(){
+  currentMatch = await loadCurrentMatch();
+  if(!currentMatch){
+    document.getElementById('matchTitle').textContent = 'ما في مباراة مفعّلة حالياً';
+    document.querySelector('.card').style.display = 'none';
+    return;
+  }
+  document.getElementById('matchTitle').textContent = currentMatch.home + ' 🆚 ' + currentMatch.away;
+  document.getElementById('labelHome').textContent = currentMatch.home;
+  document.getElementById('labelAway').textContent = currentMatch.away;
+
+  const lockNotice = document.getElementById('lockNotice');
+  if(currentMatch.lock_time){
+    const lockDate = new Date(currentMatch.lock_time);
+    const isLocked = Date.now() >= lockDate.getTime();
+    const formatted = lockDate.toLocaleString('ar', { dateStyle: 'medium', timeStyle: 'short' });
+    if(isLocked){
+      lockNotice.textContent = 'التسجيل مقفل الآن — المباراة بدأت أو راح تبدأ قريباً';
+      document.getElementById('submitBtn').disabled = true;
+      document.getElementById('submitBtn').style.opacity = '0.5';
+    }else{
+      lockNotice.textContent = 'آخر موعد للتسجيل: ' + formatted;
+    }
+  }
+
+  await renderList();
+}
+
+async function renderList(){
+  if(!currentMatch) return;
+  const list = document.getElementById('list');
+  const count = document.getElementById('count');
+  if(!list || !count) return; // إذا حُذفت قائمة التوقعات، ما نحتاج نعرّض البيانات
+  
+  const [entries, result] = await Promise.all([
+    loadEntries(currentMatch.id),
+    loadResult(currentMatch.id)
+  ]);
+  count.textContent = entries.length;
+
+  if(entries.length === 0){
+    list.innerHTML = '<div class="empty">لسا ما في توقعات، كون أول واحد!</div>';
+    return;
+  }
+
+  list.innerHTML = entries.map(e => {
+    const isWinner = result && Number(e.bra) === Number(result.bra) && Number(e.nor) === Number(result.nor);
+    return `<div class="entry ${isWinner ? 'winner' : ''}">
+      <span class="name">${escapeHtml(e.name)}</span>
+      <span class="score">${e.bra} — ${e.nor}</span>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('submitBtn').addEventListener('click', async () => {
+  if(!currentMatch) return;
+  if(currentMatch.lock_time && Date.now() >= new Date(currentMatch.lock_time).getTime()){
+    showMsg(document.getElementById('msg'), 'التسجيل مقفل، ما بقدر أسجل توقعك', false);
+    return;
+  }
+  const nameInput = document.getElementById('pname');
+  const phoneInput = document.getElementById('pphone');
+  const braInput = document.getElementById('pbra');
+  const norInput = document.getElementById('pnor');
+  const msg = document.getElementById('msg');
+
+  const name = nameInput.value.trim();
+  const phone = phoneInput.value.trim();
+  phoneInput.classList.remove('invalid');
+
+  if(!name){
+    showMsg(msg, 'اكتب اسمك أولاً', false);
+    return;
+  }
+  if(!isValidSyrianPhone(phone)){
+    phoneInput.classList.add('invalid');
+    showMsg(msg, 'رقم الموبايل غير صحيح، لازم يبدأ بـ 09 ويتكون من 10 أرقام', false);
+    return;
+  }
+
+  const entries = await loadEntries(currentMatch.id);
+  const cleanedPhone = phone.replace(/[\s-]/g, '');
+  const alreadyRegistered = entries.some(e => (e.phone || '').replace(/[\s-]/g, '') === cleanedPhone);
+  if(alreadyRegistered){
+    phoneInput.classList.add('invalid');
+    showMsg(msg, 'هذا الرقم سجّل توقع لهاي المباراة قبل هيك، مسموح توقع واحد لكل رقم', false);
+    return;
+  }
+  entries.push({
+    name: name,
+    phone: phone,
+    bra: Number(braInput.value) || 0,
+    nor: Number(norInput.value) || 0,
+    ts: Date.now()
+  });
+  await saveEntries(currentMatch.id, entries);
+  showMsg(msg, 'تم تسجيل توقعك، بالتوفيق!', true);
+  nameInput.value = '';
+  phoneInput.value = '';
+  braInput.value = 0;
+  norInput.value = 0;
+  await renderList();
+});
+
+let refreshTimer = null;
+function startAutoRefresh(){
+  if(refreshTimer) return;
+  refreshTimer = setInterval(async () => {
+    try {
+      const freshMatch = await loadCurrentMatch();
+      if(JSON.stringify(freshMatch) !== JSON.stringify(currentMatch)){
+        currentMatch = freshMatch;
+        await init();
+      }
+    } catch (error) {
+      console.error('refresh error', error);
+    }
+  }, 1500);
+}
+
+window.addEventListener('storage', async (event) => {
+  if(event.key && event.key.startsWith('wc-local-')){
+    await init();
+  }
+});
+
+initSupabase();
+startAutoRefresh();
+init();
+</script>
+</body>
+</html>
